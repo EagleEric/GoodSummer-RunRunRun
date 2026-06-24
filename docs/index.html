@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>软件工程刷题系统</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="auth-panel" id="authPanel">
+        <div class="brand-block">
+          <p class="eyebrow">Quiz Studio</p>
+          <h1>软件工程刷题系统</h1>
+          <p class="subtle">GitHub Pages 静态版，账号、进度和错题集保存在当前浏览器中。</p>
+        </div>
+
+        <form class="auth-card" id="authForm">
+          <div class="auth-tabs" role="tablist" aria-label="账号操作">
+            <button type="button" class="tab active" data-auth-mode="login">登录</button>
+            <button type="button" class="tab" data-auth-mode="register">注册</button>
+          </div>
+          <label>
+            用户名
+            <input id="username" autocomplete="username" placeholder="输入用户名" />
+          </label>
+          <label>
+            密码
+            <input id="password" type="password" autocomplete="current-password" placeholder="输入密码" />
+          </label>
+          <button class="primary-button" type="submit" id="authSubmit">登录</button>
+          <p class="form-message" id="authMessage"></p>
+        </form>
+      </section>
+
+      <section class="workspace hidden" id="workspace">
+        <div class="gate-panel hidden" id="gatePanel">
+          <form class="auth-card gate-card" id="gateForm">
+            <p class="eyebrow">Access Key</p>
+            <h2>输入启动口令</h2>
+            <p class="subtle">每次打开网页都需要输入启动口令后，才能进入题库和错题集。</p>
+            <label>
+              启动口令
+              <input id="gatePassword" type="text" autocomplete="off" placeholder="输入启动口令" />
+            </label>
+            <button class="primary-button" type="submit">进入软件</button>
+            <p class="form-message" id="gateMessage"></p>
+          </form>
+        </div>
+
+        <div class="main-panel hidden" id="mainPanel">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow">Software Engineering</p>
+              <h1>刷题台</h1>
+            </div>
+            <div class="user-area">
+              <span id="userLabel"></span>
+              <button class="ghost-button" id="logoutBtn" type="button">退出</button>
+            </div>
+          </header>
+
+          <div class="layout">
+            <aside class="sidebar">
+              <section class="panel">
+                <h2>题库</h2>
+                <select id="bankSelect"></select>
+                <div class="mode-grid" aria-label="刷题模式">
+                  <button class="mode-button active" data-mode="practice" type="button">顺序刷题</button>
+                  <button class="mode-button" data-mode="wrong" type="button">错题集</button>
+                </div>
+                <button class="primary-button full" id="startBtn" type="button">开始</button>
+              </section>
+
+              <section class="panel stats-panel">
+                <h2>本轮进度</h2>
+                <div class="stat-row"><span>题量</span><strong id="statTotal">0</strong></div>
+                <div class="stat-row"><span>已答</span><strong id="statDone">0</strong></div>
+                <div class="stat-row"><span>正确</span><strong id="statRight">0</strong></div>
+                <div class="progress-track"><div id="progressBar"></div></div>
+              </section>
+
+              <section class="panel stats-panel">
+                <h2>本机数据</h2>
+                <div class="stat-row"><span>错题数</span><strong id="wrongTotal">0</strong></div>
+                <button class="secondary-button full" id="clearWrongBtn" type="button">清空当前题库错题</button>
+              </section>
+            </aside>
+
+            <section class="question-area">
+              <div class="empty-state" id="emptyState">
+                <h2>选择一个题库开始刷题</h2>
+                <p>题库来自当前网页中的 TXT 文件，错题集会自动保存在本机浏览器里。</p>
+              </div>
+
+              <article class="question-card hidden" id="questionCard">
+                <div class="question-meta">
+                  <span id="typeBadge"></span>
+                  <span id="questionCounter"></span>
+                </div>
+                <h2 id="questionText"></h2>
+                <div class="options" id="optionsBox"></div>
+                <textarea class="essay-box hidden" id="essayAnswer" placeholder="问答题可先写自己的答案，再提交对照参考答案。"></textarea>
+                <div class="actions">
+                  <button class="primary-button" id="submitBtn" type="button">提交答案</button>
+                  <button class="secondary-button hidden" id="nextBtn" type="button">下一题</button>
+                </div>
+                <div class="result hidden" id="resultBox"></div>
+              </article>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
