@@ -4,6 +4,7 @@ const BANK_FILES = [
   "第 3 次作业.txt",
   "第 4 次作业.txt",
   "第 5 次作业.txt",
+  "第 6 次作业.txt",
   "第 7 次作业.txt",
   "第 8 次作业.txt",
   "第 9 次作业.txt",
