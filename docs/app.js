@@ -456,7 +456,7 @@ function splitAnswerMarker(text) {
 
 function splitSections(text) {
   const sections = [];
-  const pattern = /^\s*(?:#{1,6}\s*)?(?:@)?([一二三四五六七八九十]+[、.．\s-]*.+)$/gm;
+  const pattern = /^\s*(?:#{1,6}\s*)?(?:@)?([一二三四五六七八九十]+[、.．\s-]+.*(?:选择题|判断题|填空题|问答题|简答题|选择|判断|填空|问答|简答).*)$/gm;
   const matches = Array.from(text.matchAll(pattern));
   for (let i = 0; i < matches.length; i += 1) {
     const match = matches[i];
@@ -492,7 +492,7 @@ function parseChoiceAnswers(content) {
       continue;
     }
     const normalized = normalizeAnswer(line);
-    if (/^[A-D]+$/.test(normalized)) unnumbered.push(normalized);
+    if (/^[A-Z]+$/.test(normalized)) unnumbered.push(normalized);
   }
   if (!Object.keys(answers).length) {
     unnumbered.forEach((answer, index) => {
@@ -609,7 +609,7 @@ function parseNumberedQuestions(sectionText) {
 
 function splitOptions(text) {
   const options = {};
-  const matches = Array.from(text.matchAll(/([A-D])\s*[.．、]\s*/g));
+  const matches = Array.from(text.matchAll(/([A-Z])\s*[.．、]\s*/g));
   for (let i = 0; i < matches.length; i += 1) {
     const match = matches[i];
     const next = matches[i + 1];
@@ -627,7 +627,8 @@ function parseQuestionBank(filename, text) {
       for (const item of parseNumberedQuestions(section.content)) {
         const options = splitOptions(item.body);
         const questionText = item.body.split(/\s+A\s*[.．、]\s*/)[0].trim();
-        const isMulti = questionText.includes("多选");
+        const answer = answerSections.choice[item.number] || "";
+        const isMulti = questionText.includes("多选") || normalizeAnswer(answer).length > 1;
         questions.push({
           id: `choice-${item.number}`,
           number: item.number,
@@ -635,7 +636,7 @@ function parseQuestionBank(filename, text) {
           typeLabel: isMulti ? "多选题" : "选择题",
           question: questionText.replace("多选：", "").trim(),
           options,
-          answer: answerSections.choice[item.number] || "",
+          answer,
         });
       }
     } else if (section.title.includes("判断")) {
