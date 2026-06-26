@@ -8,6 +8,20 @@ const BANK_FILES = [
   "第 7 次作业.txt",
   "第 8 次作业.txt",
   "第 9 次作业.txt",
+  "期末复习 第1章.txt",
+  "期末复习 第2章.txt",
+  "期末复习 第3章.txt",
+  "期末复习 第4章.txt",
+  "期末复习 第5章.txt",
+  "期末复习 第6章.txt",
+  "期末复习 第7章.txt",
+  "期末复习 第8章.txt",
+  "期末复习 第9章.txt",
+  "期末复习 第10章.txt",
+  "期末复习 第11章.txt",
+  "期末复习 第12章.txt",
+  "期末复习 第13章.txt",
+  "期末复习 第14章.txt",
 ];
 
 const STARTUP_PASSWORD_HASH = "e375c7115acb58ca0ce500bc1fc17abdedae25778b4b2939c35d9080191e0396";
