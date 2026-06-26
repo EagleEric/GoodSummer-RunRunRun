@@ -26,6 +26,7 @@ const BANK_FILES = [
 
 const STARTUP_PASSWORD_HASH = "e375c7115acb58ca0ce500bc1fc17abdedae25778b4b2939c35d9080191e0396";
 const STORAGE_PREFIX = "software_quiz_pages_v1";
+const DEFAULT_TYPE_FILTERS = ["choice", "judge", "blank", "essay"];
 
 const state = {
   authMode: "login",
@@ -34,6 +35,7 @@ const state = {
   banks: [],
   mode: "practice",
   currentBank: "",
+  selectedTypes: [...DEFAULT_TYPE_FILTERS],
   questions: [],
   index: 0,
   done: 0,
@@ -57,6 +59,9 @@ const els = {
   userLabel: document.querySelector("#userLabel"),
   logoutBtn: document.querySelector("#logoutBtn"),
   bankSelect: document.querySelector("#bankSelect"),
+  selectAllTypesBtn: document.querySelector("#selectAllTypesBtn"),
+  typeFilterInputs: Array.from(document.querySelectorAll("[data-type-filter]")),
+  typeCountBadges: Array.from(document.querySelectorAll("[data-type-count]")),
   startBtn: document.querySelector("#startBtn"),
   emptyState: document.querySelector("#emptyState"),
   questionCard: document.querySelector("#questionCard"),
@@ -141,6 +146,7 @@ function upsertWrong(question, userAnswer, correctAnswer) {
   };
   saveWrongStore(store);
   updateWrongTotal();
+  updateTypeCounts();
 }
 
 function removeWrong(question) {
@@ -148,6 +154,7 @@ function removeWrong(question) {
   delete store[`${state.currentBank}::${question.id}`];
   saveWrongStore(store);
   updateWrongTotal();
+  updateTypeCounts();
 }
 
 function clearCurrentBankWrong() {
@@ -160,6 +167,7 @@ function clearCurrentBankWrong() {
   }
   saveWrongStore(store);
   updateWrongTotal();
+  updateTypeCounts();
 }
 
 function setAuthMode(mode) {
@@ -206,10 +214,75 @@ async function loadBanks() {
     els.bankSelect.value = state.currentBank;
   }
   updateWrongTotal();
+  updateTypeCounts();
 }
 
 function currentBank() {
   return state.banks.find((bank) => bank.id === state.currentBank);
+}
+
+function typeGroup(type) {
+  if (type === "single" || type === "multi") return "choice";
+  return type;
+}
+
+function selectedTypeGroups() {
+  return els.typeFilterInputs.filter((input) => input.checked).map((input) => input.dataset.typeFilter);
+}
+
+function loadTypeFilters() {
+  const saved = readJson("typeFilters", DEFAULT_TYPE_FILTERS);
+  state.selectedTypes = Array.isArray(saved)
+    ? saved.filter((type) => DEFAULT_TYPE_FILTERS.includes(type))
+    : [...DEFAULT_TYPE_FILTERS];
+  for (const input of els.typeFilterInputs) {
+    input.checked = state.selectedTypes.includes(input.dataset.typeFilter);
+  }
+  updateTypeCounts();
+}
+
+function saveTypeFilters() {
+  writeJson("typeFilters", state.selectedTypes);
+}
+
+function syncTypeFilters({ persist = false } = {}) {
+  state.selectedTypes = selectedTypeGroups();
+  if (persist) saveTypeFilters();
+  updateWrongTotal();
+  updateTypeCounts();
+}
+
+function sourceQuestionsForCurrentMode() {
+  if (state.mode === "wrong") {
+    return bankWrongItems(state.currentBank).map((item) => ({
+      ...item,
+      answer: item.answer || item.correctAnswer || "",
+    }));
+  }
+  const bank = currentBank();
+  return bank ? bank.questions : [];
+}
+
+function applyTypeFilter(questions) {
+  const selected = new Set(state.selectedTypes);
+  if (!selected.size) return [];
+  return questions.filter((question) => selected.has(typeGroup(question.type)));
+}
+
+function countQuestionsByType(questions) {
+  const counts = Object.fromEntries(DEFAULT_TYPE_FILTERS.map((type) => [type, 0]));
+  for (const question of questions) {
+    const group = typeGroup(question.type);
+    if (Object.prototype.hasOwnProperty.call(counts, group)) counts[group] += 1;
+  }
+  return counts;
+}
+
+function updateTypeCounts() {
+  const counts = countQuestionsByType(sourceQuestionsForCurrentMode());
+  for (const badge of els.typeCountBadges) {
+    badge.textContent = String(counts[badge.dataset.typeCount] || 0);
+  }
 }
 
 function startSession() {
@@ -219,24 +292,31 @@ function startSession() {
   state.right = 0;
   state.answered = false;
   els.resultBox.classList.add("hidden");
+  syncTypeFilters({ persist: true });
 
-  if (state.mode === "wrong") {
-    state.questions = bankWrongItems(state.currentBank).map((item) => ({
-      ...item,
-      answer: item.answer || item.correctAnswer || "",
-    }));
-  } else {
-    const bank = currentBank();
-    state.questions = bank ? bank.questions : [];
-  }
+  const sourceQuestions = sourceQuestionsForCurrentMode();
+  state.questions = applyTypeFilter(sourceQuestions);
 
   updateStats();
   updateWrongTotal();
+  updateTypeCounts();
+  if (!state.selectedTypes.length) {
+    els.questionCard.classList.add("hidden");
+    els.emptyState.classList.remove("hidden");
+    els.emptyState.querySelector("h2").textContent = "请至少选择一种题型";
+    els.emptyState.querySelector("p").textContent = "在左侧勾选选择题、判断题、填空题或问答题后，再点击开始。";
+    return;
+  }
   if (!state.questions.length) {
     els.questionCard.classList.add("hidden");
     els.emptyState.classList.remove("hidden");
-    els.emptyState.querySelector("h2").textContent = state.mode === "wrong" ? "这个题库暂无错题" : "这个题库暂无题目";
-    els.emptyState.querySelector("p").textContent = state.mode === "wrong" ? "答错的题会自动进入这里。" : "请检查题库 TXT 是否已经上传。";
+    if (sourceQuestions.length) {
+      els.emptyState.querySelector("h2").textContent = state.mode === "wrong" ? "当前筛选下暂无错题" : "当前筛选下暂无题目";
+      els.emptyState.querySelector("p").textContent = "可以换一种题型，或点击“全选”恢复全部题目。";
+    } else {
+      els.emptyState.querySelector("h2").textContent = state.mode === "wrong" ? "这个题库暂无错题" : "这个题库暂无题目";
+      els.emptyState.querySelector("p").textContent = state.mode === "wrong" ? "答错的题会自动进入这里。" : "请检查题库 TXT 是否已经上传。";
+    }
     return;
   }
   els.emptyState.classList.add("hidden");
@@ -347,7 +427,7 @@ function updateStats() {
 }
 
 function updateWrongTotal() {
-  els.wrongTotal.textContent = String(bankWrongItems(state.currentBank).length);
+  els.wrongTotal.textContent = String(applyTypeFilter(bankWrongItems(state.currentBank)).length);
 }
 
 function normalizeAnswer(answer) {
@@ -613,6 +693,8 @@ document.querySelectorAll("[data-mode]").forEach((button) => {
   button.addEventListener("click", () => {
     state.mode = button.dataset.mode;
     document.querySelectorAll("[data-mode]").forEach((item) => item.classList.toggle("active", item === button));
+    updateWrongTotal();
+    updateTypeCounts();
   });
 });
 
@@ -666,6 +748,18 @@ els.gateForm.addEventListener("submit", async (event) => {
 els.bankSelect.addEventListener("change", () => {
   state.currentBank = els.bankSelect.value;
   updateWrongTotal();
+  updateTypeCounts();
+});
+
+els.selectAllTypesBtn.addEventListener("click", () => {
+  for (const input of els.typeFilterInputs) {
+    input.checked = true;
+  }
+  syncTypeFilters({ persist: true });
+});
+
+els.typeFilterInputs.forEach((input) => {
+  input.addEventListener("change", () => syncTypeFilters({ persist: true }));
 });
 
 els.startBtn.addEventListener("click", startSession);
@@ -677,6 +771,7 @@ els.clearWrongBtn.addEventListener("click", () => {
 });
 
 (async function init() {
+  loadTypeFilters();
   const username = sessionStorage.getItem(storageKey("currentUser"));
   const knownUsers = users();
   if (username && knownUsers[username]) {

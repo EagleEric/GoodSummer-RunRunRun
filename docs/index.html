@@ -69,6 +69,32 @@
                   <button class="mode-button active" data-mode="practice" type="button">顺序刷题</button>
                   <button class="mode-button" data-mode="wrong" type="button">错题集</button>
                 </div>
+                <div class="type-filter" aria-label="题型筛选">
+                  <div class="type-filter-head">
+                    <span>题型</span>
+                    <button class="text-button" id="selectAllTypesBtn" type="button">全选</button>
+                  </div>
+                  <label class="type-check">
+                    <input type="checkbox" data-type-filter="choice" checked />
+                    <span>选择题</span>
+                    <small data-type-count="choice">0</small>
+                  </label>
+                  <label class="type-check">
+                    <input type="checkbox" data-type-filter="judge" checked />
+                    <span>判断题</span>
+                    <small data-type-count="judge">0</small>
+                  </label>
+                  <label class="type-check">
+                    <input type="checkbox" data-type-filter="blank" checked />
+                    <span>填空题</span>
+                    <small data-type-count="blank">0</small>
+                  </label>
+                  <label class="type-check">
+                    <input type="checkbox" data-type-filter="essay" checked />
+                    <span>问答题</span>
+                    <small data-type-count="essay">0</small>
+                  </label>
+                </div>
                 <button class="primary-button full" id="startBtn" type="button">开始</button>
               </section>
 
