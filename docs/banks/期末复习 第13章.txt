@@ -1,0 +1,13 @@
+期末复习 第13章
+
+@三、填空题
+
+1. 软件质量依赖于软件的内部特性及其组合，为了对软件质量进行度量，必须对影响软件质量的要素进行 ，并建立实用的软件质量度量体系或模型。
+2. 软件工程包括3个要素，即 、 、 。
+3. 螺旋模型结合了诸多模型的特征，并加上了 。
+
+答案：
+@三、填空题
+1.度量
+2.方法、工具、过程
+3.风险分析 写出常用的软件工程工具，每类至少写出一个。 答： Table 1: | | 工具 | | --- | --- | | 面向对象建模 | IBM Rational Rose Microsoft Visio Enterprise Architect ArgoUML | | 数据建模 | Sybase PowerDesigner MySQL Workbenc | | 缺陷管理 | URTracker BugFree Mantis Atlassian JIRA Studio | | 项目管理 | Microsoft Project ZenTaoPMS Redmine KIS |
