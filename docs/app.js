@@ -22,6 +22,7 @@ const BANK_FILES = [
   "期末复习 第12章.txt",
   "期末复习 第13章.txt",
   "期末复习 第14章.txt",
+  "软件工程期末复习.txt",
 ];
 
 const STARTUP_PASSWORD_HASH = "e375c7115acb58ca0ce500bc1fc17abdedae25778b4b2939c35d9080191e0396";
