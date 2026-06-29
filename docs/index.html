@@ -4,37 +4,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>软件工程刷题系统</title>
+    <script type="text/javascript">
+      (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script", "xelho359fs");
+    </script>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="app-shell">
-      <section class="auth-panel" id="authPanel">
-        <div class="brand-block">
-          <p class="eyebrow">Quiz Studio</p>
-          <h1>软件工程刷题系统</h1>
-          <p class="subtle">GitHub Pages 静态版，账号、进度和错题集保存在当前浏览器中。</p>
-        </div>
-
-        <form class="auth-card" id="authForm">
-          <div class="auth-tabs" role="tablist" aria-label="账号操作">
-            <button type="button" class="tab active" data-auth-mode="login">登录</button>
-            <button type="button" class="tab" data-auth-mode="register">注册</button>
-          </div>
-          <label>
-            用户名
-            <input id="username" autocomplete="username" placeholder="输入用户名" />
-          </label>
-          <label>
-            密码
-            <input id="password" type="password" autocomplete="current-password" placeholder="输入密码" />
-          </label>
-          <button class="primary-button" type="submit" id="authSubmit">登录</button>
-          <p class="form-message" id="authMessage"></p>
-        </form>
-      </section>
+      <section class="auth-panel hidden" id="authPanel"></section>
 
       <section class="workspace hidden" id="workspace">
         <div class="gate-panel hidden" id="gatePanel">
+          <div class="brand-block">
+            <p class="eyebrow">Quiz Studio</p>
+            <h1>软件工程刷题系统</h1>
+            <p class="subtle">GitHub Pages 静态版，错题集和筛选偏好保存在当前浏览器中。</p>
+          </div>
+
           <form class="auth-card gate-card" id="gateForm">
             <p class="eyebrow">Access Key</p>
             <h2>输入启动口令</h2>
@@ -56,7 +46,7 @@
             </div>
             <div class="user-area">
               <span id="userLabel"></span>
-              <button class="ghost-button" id="logoutBtn" type="button">退出</button>
+              <button class="ghost-button" id="logoutBtn" type="button">重新输入口令</button>
             </div>
           </header>
 

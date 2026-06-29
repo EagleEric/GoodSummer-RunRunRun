@@ -25,13 +25,11 @@ const BANK_FILES = [
   "软件工程期末复习.txt",
 ];
 
-const STARTUP_PASSWORD_HASH = "e375c7115acb58ca0ce500bc1fc17abdedae25778b4b2939c35d9080191e0396";
+const STARTUP_PASSWORD_HASH = "4b1ae81eff4b0ea09a4a58b1a5797fba81fcec2e4fd621e2fd98c161e9336497";
 const STORAGE_PREFIX = "software_quiz_pages_v1";
 const DEFAULT_TYPE_FILTERS = ["choice", "judge", "blank", "essay"];
 
 const state = {
-  authMode: "login",
-  user: null,
   gatePassed: false,
   banks: [],
   mode: "practice",
@@ -47,16 +45,11 @@ const state = {
 const els = {
   authPanel: document.querySelector("#authPanel"),
   workspace: document.querySelector("#workspace"),
-  authForm: document.querySelector("#authForm"),
   gatePanel: document.querySelector("#gatePanel"),
   mainPanel: document.querySelector("#mainPanel"),
   gateForm: document.querySelector("#gateForm"),
   gatePassword: document.querySelector("#gatePassword"),
   gateMessage: document.querySelector("#gateMessage"),
-  authSubmit: document.querySelector("#authSubmit"),
-  authMessage: document.querySelector("#authMessage"),
-  username: document.querySelector("#username"),
-  password: document.querySelector("#password"),
   userLabel: document.querySelector("#userLabel"),
   logoutBtn: document.querySelector("#logoutBtn"),
   bankSelect: document.querySelector("#bankSelect"),
@@ -104,20 +97,26 @@ async function sha256(text) {
   return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-async function hashPassword(username, password) {
-  return sha256(`${username.trim().toLowerCase()}::${password}`);
-}
-
-function users() {
-  return readJson("users", {});
-}
-
-function saveUsers(nextUsers) {
-  writeJson("users", nextUsers);
-}
-
 function wrongKey() {
-  return state.user ? `wrong:${state.user.username}` : "wrong:guest";
+  return "wrong:guest";
+}
+
+function migrateLegacyWrongStores() {
+  if (localStorage.getItem(storageKey("wrongMigratedToGuest")) === "1") return;
+  const guestKey = storageKey(wrongKey());
+  const merged = readJson(wrongKey(), {});
+  const prefix = storageKey("wrong:");
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (!key || key === guestKey || !key.startsWith(prefix)) continue;
+    try {
+      Object.assign(merged, JSON.parse(localStorage.getItem(key)) || {});
+    } catch {
+      // Ignore old malformed local data; the current guest store remains usable.
+    }
+  }
+  writeJson(wrongKey(), merged);
+  localStorage.setItem(storageKey("wrongMigratedToGuest"), "1");
 }
 
 function wrongStore() {
@@ -171,24 +170,14 @@ function clearCurrentBankWrong() {
   updateTypeCounts();
 }
 
-function setAuthMode(mode) {
-  state.authMode = mode;
-  document.querySelectorAll("[data-auth-mode]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.authMode === mode);
-  });
-  els.authSubmit.textContent = mode === "login" ? "登录" : "注册";
-  els.authMessage.textContent = "";
-}
-
-function showWorkspace(user, gatePassed = false) {
-  state.user = user;
+function showWorkspace(gatePassed = false) {
   state.gatePassed = Boolean(gatePassed);
-  els.userLabel.textContent = user ? `已登录：${user.username}` : "";
-  els.authPanel.classList.toggle("hidden", Boolean(user));
-  els.workspace.classList.toggle("hidden", !user);
-  els.gatePanel.classList.toggle("hidden", !user || state.gatePassed);
-  els.mainPanel.classList.toggle("hidden", !user || !state.gatePassed);
-  if (user && !state.gatePassed) {
+  els.userLabel.textContent = "本机模式";
+  els.authPanel?.classList.add("hidden");
+  els.workspace.classList.remove("hidden");
+  els.gatePanel.classList.toggle("hidden", state.gatePassed);
+  els.mainPanel.classList.toggle("hidden", !state.gatePassed);
+  if (!state.gatePassed) {
     setTimeout(() => els.gatePassword.focus(), 0);
   }
 }
@@ -687,10 +676,6 @@ function parseQuestionBank(filename, text) {
   };
 }
 
-document.querySelectorAll("[data-auth-mode]").forEach((button) => {
-  button.addEventListener("click", () => setAuthMode(button.dataset.authMode));
-});
-
 document.querySelectorAll("[data-mode]").forEach((button) => {
   button.addEventListener("click", () => {
     state.mode = button.dataset.mode;
@@ -700,37 +685,8 @@ document.querySelectorAll("[data-mode]").forEach((button) => {
   });
 });
 
-els.authForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  els.authMessage.textContent = "";
-  const username = els.username.value.trim();
-  const password = els.password.value;
-  if (username.length < 2 || password.length < 4) {
-    els.authMessage.textContent = "用户名至少 2 位，密码至少 4 位。";
-    return;
-  }
-  const nextUsers = users();
-  const passwordHash = await hashPassword(username, password);
-  if (state.authMode === "register") {
-    if (nextUsers[username]) {
-      els.authMessage.textContent = "用户名已存在。";
-      return;
-    }
-    nextUsers[username] = { username, passwordHash, createdAt: new Date().toISOString() };
-    saveUsers(nextUsers);
-  } else if (!nextUsers[username] || nextUsers[username].passwordHash !== passwordHash) {
-    els.authMessage.textContent = "用户名或密码错误。";
-    return;
-  }
-  sessionStorage.removeItem(storageKey("gatePassed"));
-  sessionStorage.setItem(storageKey("currentUser"), username);
-  showWorkspace({ username }, false);
-});
-
 els.logoutBtn.addEventListener("click", () => {
-  sessionStorage.removeItem(storageKey("currentUser"));
-  sessionStorage.removeItem(storageKey("gatePassed"));
-  showWorkspace(null, false);
+  showWorkspace(false);
 });
 
 els.gateForm.addEventListener("submit", async (event) => {
@@ -742,8 +698,7 @@ els.gateForm.addEventListener("submit", async (event) => {
     return;
   }
   els.gatePassword.value = "";
-  sessionStorage.setItem(storageKey("gatePassed"), "1");
-  showWorkspace(state.user, true);
+  showWorkspace(true);
   await loadBanks();
 });
 
@@ -773,14 +728,7 @@ els.clearWrongBtn.addEventListener("click", () => {
 });
 
 (async function init() {
+  migrateLegacyWrongStores();
   loadTypeFilters();
-  const username = sessionStorage.getItem(storageKey("currentUser"));
-  const knownUsers = users();
-  if (username && knownUsers[username]) {
-    const gatePassed = sessionStorage.getItem(storageKey("gatePassed")) === "1";
-    showWorkspace({ username }, gatePassed);
-    if (gatePassed) await loadBanks();
-  } else {
-    showWorkspace(null, false);
-  }
+  showWorkspace(false);
 })();

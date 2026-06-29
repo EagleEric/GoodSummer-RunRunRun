@@ -178,11 +178,13 @@ textarea:focus {
 .gate-panel {
   min-height: calc(100vh - 56px);
   display: grid;
-  place-items: center;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 48px;
+  align-items: center;
 }
 
 .gate-card {
-  width: min(420px, 100%);
+  width: 100%;
 }
 
 .gate-card h2 {
@@ -455,6 +457,7 @@ textarea:focus {
 
 @media (max-width: 820px) {
   .auth-panel,
+  .gate-panel,
   .layout {
     grid-template-columns: 1fr;
   }
